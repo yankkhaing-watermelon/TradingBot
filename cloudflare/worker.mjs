@@ -81,7 +81,7 @@ export default {
    const res=await env.ASSETS.fetch(request);const out=new Response(res.body,res);
    out.headers.set('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");out.headers.set('X-Content-Type-Options','nosniff');out.headers.set('Cache-Control','no-cache');return out;
   }
-  if(!env.APP_TOKEN||env.APP_TOKEN.length<24)return reply({error:'Set APP_TOKEN secret to at least 24 characters in Cloudflare.'},503);
+  if(!env.APP_TOKEN||(!/^\d{4}$/.test(env.APP_TOKEN)&&env.APP_TOKEN.length<24))return reply({error:'Set APP_TOKEN secret to a four-digit PIN or at least 24 characters in Cloudflare.'},503);
   if(await hash(request.headers.get('Authorization')||'')!==await hash('Bearer '+env.APP_TOKEN))return reply({error:'Invalid app access token'},401);
   if(!env.DB)return reply({error:'Connect D1 with binding name DB and apply the SQL migration.'},503);
   try{

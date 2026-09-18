@@ -24,9 +24,9 @@ Cloudflare installs package.json dependencies. This project uses Wrangler 4.x; t
 
 ## 3. Set the access token
 
-Worker **Settings → Variables and Secrets**: add a **Secret** named `APP_TOKEN`, with a random value of at least 24 characters. Save/deploy the change. Keep it private; don't commit it to GitHub. Open the Worker URL and enter this same value to unlock the research API.
+Worker **Settings → Variables and Secrets**: add a **Secret** named `APP_TOKEN`, with a four-digit PIN (leading zeros are supported) or a random value of at least 24 characters. Save/deploy the change. Keep it private; don't commit it to GitHub. Open the Worker URL and enter this same value to unlock the research API.
 
-The page shell is public; research and import APIs require the token. Missing/short APP_TOKEN fails closed. Anyone given the token can read and import research. Use Cloudflare Access as an additional layer if needed.
+The page shell is public; research and import APIs require the token. Missing or invalid APP_TOKEN fails closed. A four-digit PIN has only 10,000 possibilities and offers limited protection on a public website; a longer token is recommended. Anyone given the token can read and import research. Use Cloudflare Access as an additional layer if needed.
 
 ## 4. Test JSON upload
 
