@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "market": "BURSA",
+  "report_date": "2026-09-18",
+  "generated_at": "2026-09-18T20:00:00+08:00",
+  "coverage_start": "2026-09-17T20:00:00+08:00",
+  "coverage_end": "2026-09-18T20:00:00+08:00",
+  "summary": [
+    "TEMPLATE ONLY \u2014 replace with researched content."
+  ],
+  "items": [],
+  "coverage_gaps": [
+    "Empty template; no market research included."
+  ]
+}
