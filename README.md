@@ -1,3 +1,7 @@
+# Cloudflare deployment (recommended)
+
+TradingBot now includes a JavaScript Worker and Cloudflare D1 backend. **Follow [CLOUDFLARE.md](CLOUDFLARE.md)** for browser-based deployment. The Python/Docker instructions below are optional legacy local hosting.
+
 # TradingBot — Bursa Research
 
 A self-hosted, mobile-friendly Bursa Malaysia research desk. Imports the JSON reports from your scheduled research email into a persistent SQLite archive. No paid AI API or Python packages required.

@@ -1,0 +1,5 @@
+{
+ "name":"bursa-tradingbot","version":"0.2.0","private":true,
+ "scripts":{"test":"node --test tests/cloudflare.test.mjs","deploy":"wrangler deploy","dev":"wrangler dev"},
+ "devDependencies":{"wrangler":"^4.0.0"}
+}

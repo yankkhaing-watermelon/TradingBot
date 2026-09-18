@@ -1,6 +1,8 @@
 'use strict';
 const $ = id => document.getElementById(id);
 let token = sessionStorage.getItem('appToken') || '';
+let offset = 0;
+let maxImportBytes = 5*1024*1024;
 let state = {items: [], reports: [], history: []};
 function el(tag, text, cls) { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; }
 function message(text, bad=false) { $('message').textContent=text; $('message').className=bad?'error':'success'; }
@@ -33,7 +35,7 @@ function renderFeed() {
 function render() {
   $('itemCount').textContent=state.items.length;$('reportCount').textContent=state.reports.length;
   const codes=[...new Set(state.items.flatMap(i=>i.stock_codes))].sort();$('companyCount').textContent=codes.length;
-  const latest=state.reports[0];$('updated').textContent=latest?'Latest research: '+latest.report_date+' · Generated '+latest.generated_at:'No research imported yet';
+  const latest=state.reports[0];$('updated').textContent=latest?'Displayed research: '+latest.report_date+' · Generated '+latest.generated_at:'No research imported yet';
   $('export').disabled=!latest;
   const selected=$('category').value;$('category').replaceChildren(new Option('All categories',''));[...new Set(state.items.map(i=>i.category))].sort().forEach(c=>$('category').add(new Option(c,c)));$('category').value=selected;
   $('coverage').hidden=!latest;$('summary').hidden=!latest;
@@ -43,11 +45,14 @@ function render() {
   codes.forEach(code=>{const items=state.items.filter(i=>i.stock_codes.includes(code));const names=[...new Set(items.flatMap(i=>i.company_names))];const card=el('button',undefined,'panel company');card.append(el('h2',code),el('p',names.join(' / ')||'Company name unavailable'),el('span',items.length+' research items','muted'));card.onclick=()=>{$('search').value=code;$('category').value='';showTab('research');renderFeed();};$('companyList').append(card);});
   $('historyRows').replaceChildren();state.history.forEach(h=>{const row=el('tr');[h.created_at,h.origin,h.status,h.added,h.repeated].forEach(v=>row.append(el('td',String(v))));$('historyRows').append(row);});renderFeed();
 }
-async function load(){const [data,status]=await Promise.all([api('/api/research'),api('/api/status')]);state=data;$('connect').hidden=true;$('desk').hidden=false;$('sync').disabled=!status.gmail_configured;$('gmailState').textContent=status.gmail_configured?'Gmail credentials configured · Account verified on each sync':'Gmail sync not configured · JSON upload is ready to use';render();}
+async function load(){const [data,status]=await Promise.all([api('/api/research?offset='+offset),api('/api/status')]);state=data;maxImportBytes=status.max_import_bytes||5*1024*1024;$('newer').hidden=offset===0;$('older').hidden=data.next_offset==null;$('connect').hidden=true;$('desk').hidden=false;$('sync').disabled=!status.gmail_configured;$('gmailState').textContent=status.gmail_configured?'Gmail credentials configured · Account verified on each sync':'Gmail sync not configured · JSON upload is ready to use';render();}
 $('login').onsubmit=async e=>{e.preventDefault();token=$('token').value;try{await load();sessionStorage.setItem('appToken',token);$('token').value='';message('Research desk connected.');}catch(e){message(e.message,true);}};
-$('file').onchange=async()=>{const file=$('file').files[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error('File exceeds 5 MB');const result=await api('/api/import',{method:'POST',body:await file.text()});await load();message(`${result.status}: ${result.added} new, ${result.repeated} repeated items.`);}catch(e){message(e.message,true);}finally{$('file').value='';}};
-$('sync').onclick=async()=>{$('sync').disabled=true;message('Reading research attachments from Gmail…');try{const r=await api('/api/gmail/sync',{method:'POST',body:'{}'});await load();message(`Scanned ${r.scanned} messages. ${r.results.reduce((n,x)=>n+x.added,0)} new items. ${r.errors.length} messages need retry.${r.more_available?' More than 250 matching messages exist; use manual JSON import for older history.':''}`,r.errors.length>0);}catch(e){message(e.message,true);}finally{$('sync').disabled=false;}};
+$('file').onchange=async()=>{const file=$('file').files[0];if(!file)return;try{if(file.size>maxImportBytes)throw Error('File exceeds server limit ('+Math.round(maxImportBytes/1000)+' KB)');const result=await api('/api/import',{method:'POST',body:await file.text()});await load();message(`${result.status}: ${result.added} new, ${result.repeated} repeated items.`);}catch(e){message(e.message,true);}finally{$('file').value='';}};
+$('sync').onclick=async()=>{$('sync').disabled=true;message('Reading research attachments from Gmail…');try{const r=await api('/api/gmail/sync',{method:'POST',body:'{}'});await load();message(`Scanned ${r.scanned} messages. ${r.results.reduce((n,x)=>n+x.added,0)} new items. ${r.errors.length} messages need retry.${r.more_available?' Additional matching messages exist; use manual JSON import for older history.':''}`,r.errors.length>0);}catch(e){message(e.message,true);}finally{$('sync').disabled=false;}};
 $('export').onclick=()=>{const r=state.reports[0];if(!r)return;const url=URL.createObjectURL(new Blob([JSON.stringify(r.data,null,2)],{type:'application/json'}));const a=el('a');a.href=url;a.download='bursa-research-'+r.report_date+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('search').oninput=renderFeed;$('category').onchange=renderFeed;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $('theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('light',document.body.classList.contains('light'));};if(localStorage.getItem('light')==='true')document.body.classList.add('light');
 if(token)load().catch(e=>{sessionStorage.removeItem('appToken');message(e.message,true);});
+
+$('older').onclick=async()=>{offset=state.next_offset;try{await load();}catch(e){message(e.message,true);}};
+$('newer').onclick=async()=>{offset=Math.max(0,offset-20);try{await load();}catch(e){message(e.message,true);}};
