@@ -4,7 +4,7 @@
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-09-01",
   "assets": { "directory": "./static", "binding": "ASSETS", "run_worker_first": true },
-  "d1_databases": [{ "binding": "DB", "database_name": "tradingbot-research", "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID", "migrations_dir": "migrations" }],
+  "d1_databases": [{ "binding": "DB", "database_name": "tradingbot-research", "database_id": "11fc1d48-f230-4f92-b957-87e17d2e4a9c", "migrations_dir": "migrations" }],
   "vars": { "GMAIL_ACCOUNT": "investmalaysia2025@gmail.com" },
   "triggers": { "crons": ["*/15 * * * *"] }
 }
